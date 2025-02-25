@@ -20,26 +20,13 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                echo "Building Docker image..."
+                echo "Building Docker image!"
                 docker build -f Dockerfile -t ${IMAGE_NAME} .
-                echo "Docker image built successfully!"
+                echo "Starting is docker container!"
+                docker run -d -p 5050:5050 --name myapp-container myapp-image
                 """
             }
-        }
-
-        stage('Start or Reuse Container') {
-            steps {
-                script {
-                    def containerExists = sh(script: "docker ps -a --format '{{.Names}}' | grep -w ${CONTAINER_NAME} || true", returnStdout: true).trim()
-                    if (containerExists) {
-                        echo "Container ${CONTAINER_NAME} already exists. Restarting..."
-                        sh "docker start ${CONTAINER_NAME}"
-                    } else {
-                        echo "Creating and starting new container ${CONTAINER_NAME}..."
-                        sh "docker run -d -p 5050:5050 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
-                    }
-                }
-            }
+       
         }
 
         stage('Run Tests') {
@@ -66,6 +53,13 @@ pipeline {
                 )
             }
         }
+     stage('Cleanup') {
+            steps {
+                sh """
+                echo "Cleaning up Docker containers myapp-container"
+                docker rm -f myapp-container || true
+                """
+            }
     }
 
     post {
