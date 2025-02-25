@@ -8,6 +8,7 @@ WORKDIR /app
 COPY . .
 
 # Устанавливаем зависимости (если есть requirements.txt — используем его)
+RUN apt-get update && apt-get install -y git
 RUN pip install --no-cache-dir --upgrade pip \
     && pip install Flask pytest
 
