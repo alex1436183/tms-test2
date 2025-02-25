@@ -1,15 +1,13 @@
 pipeline { 
-        agent { label 'minion' } 
-        reuseNode true 
-    }
-
+    agent { label 'minion' } 
+    reuseNode true
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
     }
-
+    
     stages {
         stage('Clone repository') {
             steps {
@@ -46,10 +44,10 @@ pipeline {
                         docker { image 'myapp-image' }  
                     }
                     steps {
-                        sh """
-                        echo "Running test_app.py inside Docker container..."
-                        docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
-                        """
+                        script {
+                            echo "Running test_app.py inside Docker container..."
+                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
+                        }
                     }
                 }
                 stage('Run test_app2.py') {
@@ -57,10 +55,10 @@ pipeline {
                         docker { image 'myapp-image' }  
                     }
                     steps {
-                        sh """
-                        echo "Running test_app2.py inside Docker container..."
-                        docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
-                        """
+                        script {
+                            echo "Running test_app2.py inside Docker container..."
+                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
+                        }
                     }
                 }
             }
@@ -70,6 +68,11 @@ pipeline {
     post {
         always {
             echo 'Build finished'
+            script {
+                // Остановка контейнера после завершения всех тестов
+                sh "docker stop ${CONTAINER_NAME}"
+                sh "docker rm ${CONTAINER_NAME}"
+            }
         }
         success {
             echo 'Build was successful!'
@@ -92,4 +95,4 @@ pipeline {
             )
         }
     }
-
+}
