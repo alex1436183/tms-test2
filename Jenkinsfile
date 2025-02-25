@@ -1,20 +1,19 @@
-pipeline { 
-    agent {
-        docker {
-            image 'myapp-image'
-            label 'minion'  // Убедитесь, что у вас есть метка для выбора подходящего узла
-            reuseNode true  // Переиспользование одного и того же узла, если необходимо
-        }
-    }
+pipeline {
+    agent none  // Указываем, что по умолчанию агент не используется
+
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
+        PORT = '5050'  // Выносим порт в переменную окружения
     }
 
     stages {
         stage('Clone repository') {
+            agent {
+                label 'minion'  // Используем хост для клонирования репозитория
+            }
             steps {
                 cleanWs()
                 echo "Cloning repository from ${REPO_URL}"
@@ -23,33 +22,54 @@ pipeline {
         }
 
         stage('Build Docker Image') {
+            agent {
+                label 'minion'  // Используем хост для сборки Docker-образа
+            }
             steps {
-                sh '''
-                echo "Building Docker image..."
-                docker build --no-cache -f Dockerfile -t myapp-image .
-                echo "Docker image built successfully!"
-                '''
+                script {
+                    echo "Building Docker image..."
+                    sh """
+                    docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} .
+                    echo "Docker image built successfully!"
+                    """
+                }
             }
         }
 
         stage('Start Docker Container') {
+            agent {
+                docker {
+                    image 'myapp-image'  // Используем Docker-агент для запуска контейнера
+                    label 'minion'
+                    reuseNode true
+                }
+            }
             steps {
                 script {
                     echo "Starting docker container!"
-                    docker.run(
-                        "-d -p 5050:5050 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
-                    ) 
+                    sh """
+                    docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                    """
                 }
             }
         }
 
         stage('Run Tests') {
+            agent {
+                docker {
+                    image 'myapp-image'  // Используем Docker-агент для выполнения тестов
+                    label 'minion'
+                    reuseNode true
+                }
+            }
             parallel {
                 stage('Run test_app.py') {
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
-                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
+                            sh """
+                            docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
+                            """
                         }
                     }
                 }
@@ -57,7 +77,9 @@ pipeline {
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
-                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
+                            sh """
+                            docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
+                            """
                         }
                     }
                 }
@@ -69,9 +91,9 @@ pipeline {
         always {
             echo 'Build finished'
             script {
-                // Остановка контейнера после завершения всех тестов
-                sh "docker stop ${CONTAINER_NAME}"
-                sh "docker rm ${CONTAINER_NAME}"
+                // Остановка и удаление контейнера после завершения всех тестов
+                sh "docker stop ${CONTAINER_NAME} || true"
+                sh "docker rm ${CONTAINER_NAME} || true"
             }
         }
         success {
