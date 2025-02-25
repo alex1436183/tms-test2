@@ -26,10 +26,9 @@ pipeline {
             steps {
                 sh '''
                 echo "Building Docker image..."
-                docker build -f Dockerfile -t myapp-image .
+                docker build -f Dockerfile -t ${IMAGE_NAME} .
                 echo "Docker image built successfully!"
                 '''
-                }
             }
         }
 
@@ -96,4 +95,4 @@ pipeline {
             )
         }
     }
-
+}
