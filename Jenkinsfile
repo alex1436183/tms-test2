@@ -20,10 +20,6 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 sh """
-                echo "Stopping and removing existing container if exists..."
-                docker stop ${CONTAINER_NAME} || true
-                docker rm ${CONTAINER_NAME} || true
-
                 echo "Building Docker image!"
                 docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} .
 
@@ -34,14 +30,23 @@ pipeline {
         }
 
         stage('Run Tests') {
-            steps {
-                sh """
-                echo "Running test_app.py inside Docker container..."
-                docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
-                
-                echo "Running test_app2.py inside Docker container..."
-                docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
-                """
+            parallel {
+                stage('Run test_app.py') {
+                    steps {
+                        sh """
+                        echo "Running test_app.py inside Docker container..."
+                        docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
+                        """
+                    }
+                }
+                stage('Run test_app2.py') {
+                    steps {
+                        sh """
+                        echo "Running test_app2.py inside Docker container..."
+                        docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
+                        """
+                    }
+                }
             }
         }
 
@@ -49,9 +54,7 @@ pipeline {
             steps {
                 sh """
                 echo "Stopping and removing Docker container ${CONTAINER_NAME}"
-                docker stop ${CONTAINER_NAME} || true
                 docker rm -f ${CONTAINER_NAME} || true
-                docker system prune -f
                 """
             }
         }
@@ -82,4 +85,4 @@ pipeline {
             )
         }
     }
-}  
+}
