@@ -24,10 +24,11 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                script {
-                    echo "Building Docker image on agent!"
-                    // Выполнение команды на агенте для сборки Docker-образа
-                    sh "docker build -t ${IMAGE_NAME} ."
+                sh '''
+                echo "Building Docker image..."
+                docker build -f Dockerfile -t myapp-image .
+                echo "Docker image built successfully!"
+                '''
                 }
             }
         }
