@@ -44,7 +44,7 @@ pipeline {
             parallel {
                 stage('Run test_app.py') {
                     agent {
-                        docker { image 'myapp-image' }  /
+                        docker { image 'myapp-image' }  
                     }
                     steps {
                         sh """
