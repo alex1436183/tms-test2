@@ -1,5 +1,8 @@
 pipeline { 
-    agent { label 'minion' }
+    agent { 
+        label 'minion' 
+        reuseNode true 
+    }
 
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
@@ -19,19 +22,30 @@ pipeline {
 
         stage('Build Docker Image') {
             steps {
-                sh """
-                echo "Building Docker image!"
-                docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} .
+                script {
+                    echo "Building Docker image!"
+                    docker.build(IMAGE_NAME) 
+                }
+            }
+        }
 
-                echo "Starting docker container!"
-                docker run -d -p 5050:5050 --name ${CONTAINER_NAME} ${IMAGE_NAME}
-                """
+        stage('Start Docker Container') {
+            steps {
+                script {
+                    echo "Starting docker container!"
+                    docker.run(
+                        "-d -p 5050:5050 --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+                    ) 
+                }
             }
         }
 
         stage('Run Tests') {
             parallel {
                 stage('Run test_app.py') {
+                    agent {
+                        docker { image 'myapp-image' }  /
+                    }
                     steps {
                         sh """
                         echo "Running test_app.py inside Docker container..."
@@ -40,6 +54,9 @@ pipeline {
                     }
                 }
                 stage('Run test_app2.py') {
+                    agent {
+                        docker { image 'myapp-image' }  
+                    }
                     steps {
                         sh """
                         echo "Running test_app2.py inside Docker container..."
@@ -47,15 +64,6 @@ pipeline {
                         """
                     }
                 }
-            }
-        }
-
-        stage('Cleanup') {
-            steps {
-                sh """
-                echo "Stopping and removing Docker container ${CONTAINER_NAME}"
-                docker rm -f ${CONTAINER_NAME} || true
-                """
             }
         }
     }
