@@ -1,13 +1,18 @@
 pipeline { 
-    agent { label 'minion' } 
-    reuseNode true
+    agent {
+        docker {
+            image 'myapp-image'
+            label 'minion'  // Убедитесь, что у вас есть метка для выбора подходящего узла
+            reuseNode true  // Переиспользование одного и того же узла, если необходимо
+        }
+    }
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
     }
-    
+
     stages {
         stage('Clone repository') {
             steps {
@@ -40,9 +45,6 @@ pipeline {
         stage('Run Tests') {
             parallel {
                 stage('Run test_app.py') {
-                    agent {
-                        docker { image 'myapp-image' }  
-                    }
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
@@ -51,9 +53,6 @@ pipeline {
                     }
                 }
                 stage('Run test_app2.py') {
-                    agent {
-                        docker { image 'myapp-image' }  
-                    }
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
