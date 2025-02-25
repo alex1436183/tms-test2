@@ -26,7 +26,7 @@ pipeline {
             steps {
                 sh '''
                 echo "Building Docker image..."
-                docker buildx build --no-cache -f Dockerfile -t myapp-image .
+                docker build --no-cache -f Dockerfile -t myapp-image .
                 echo "Docker image built successfully!"
                 '''
             }
