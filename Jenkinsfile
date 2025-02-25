@@ -1,5 +1,5 @@
 pipeline { 
-        agent { docker { image 'myapp-image' } } 
+        agent { label 'minion' } 
         reuseNode true 
     }
 
