@@ -35,12 +35,9 @@ pipeline {
                 docker {
                     image "${IMAGE_NAME}"
                     label 'minion'
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
-                    reuseNode true
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"  // Запускаем контейнер
+                    reuseNode true  // Повторно используем этот агент
                 }
-            }
-            steps {
-                echo "Docker container started successfully!"
             }
         }
 
@@ -51,13 +48,13 @@ pipeline {
                         docker {
                             image "${IMAGE_NAME}"
                             label 'minion'
-                            reuseNode true
+                            reuseNode true  // Используем тот же контейнер для тестов
                         }
                     }
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
-                            sh "pytest tests/test_app.py --maxfail=1 --disable-warnings"
+                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
                         }
                     }
                 }
@@ -66,13 +63,13 @@ pipeline {
                         docker {
                             image "${IMAGE_NAME}"
                             label 'minion'
-                            reuseNode true
+                            reuseNode true  // Используем тот же контейнер для тестов
                         }
                     }
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
-                            sh "pytest tests/test_app2.py --maxfail=1 --disable-warnings"
+                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
                         }
                     }
                 }
@@ -103,4 +100,3 @@ pipeline {
         }
     }
 }
-
