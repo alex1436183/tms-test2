@@ -1,8 +1,8 @@
 pipeline {
-    agent { label 'minion' }  // Устанавливаем агент для всего пайплайна
+    agent { label 'minion' }
 
     environment {
-        REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'  // URL репозитория
+        REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
@@ -33,15 +33,10 @@ pipeline {
         stage('Start Docker Container') {
             agent {
                 docker {
-                    image "${IMAGE_NAME}"  // Используем созданный образ
-                    label 'minion'  // Агент с меткой minion
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"  // Настроим порты и имя контейнера
-                    reuseNode true  // Переиспользуем ноду
-                }
-            }
-            steps {
-                script {
-                    echo "Docker container started successfully!"
+                    image "${IMAGE_NAME}"
+                    label 'minion'
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
+                    reuseNode true
                 }
             }
         }
