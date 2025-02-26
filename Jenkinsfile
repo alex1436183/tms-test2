@@ -38,14 +38,16 @@ pipeline {
 
         stage('Start Docker Container') {
             agent {
-                label 'docker'
+                docker {
+                    image "${IMAGE_NAME}"
+                    label 'docker'
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
+                    reuseNode true
+                }
             }
             steps {
                 script {
-                    echo "Starting docker container!"
-                    sh """
-                    docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
-                    """
+                    echo "Docker container started!"
                 }
             }
         }
@@ -54,26 +56,34 @@ pipeline {
             parallel {
                 stage('Run test_app.py') {
                     agent {
-                        label 'docker'
+                        docker {
+                            image "${IMAGE_NAME}"
+                            label 'docker'
+                            reuseNode true
+                        }
                     }
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
                             sh """
-                            docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
+                            pytest tests/test_app.py --maxfail=1 --disable-warnings
                             """
                         }
                     }
                 }
                 stage('Run test_app2.py') {
                     agent {
-                        label 'docker'
+                        docker {
+                            image "${IMAGE_NAME}"
+                            label 'docker'
+                            reuseNode true
+                        }
                     }
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
                             sh """
-                            docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
+                            pytest tests/test_app2.py --maxfail=1 --disable-warnings
                             """
                         }
                     }
