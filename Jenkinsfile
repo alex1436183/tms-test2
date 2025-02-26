@@ -39,10 +39,10 @@ pipeline {
         stage('Start Docker Container') {
             agent {
                 docker {
-                    image "${IMAGE_NAME}" 
-                    label 'minion'  
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}" 
-                    reuseNode true  
+                    image "${IMAGE_NAME}"  // Используем локальный образ
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"  // Настройка портов и имени контейнера
+                    reuseNode true  // Переиспользуем ноду
+                    label 'minion'  // Запускать Docker агент на ноде 'minion'
                 }
             }
             steps {
@@ -52,4 +52,4 @@ pipeline {
             }
         }
     }
-} 
+}
