@@ -53,11 +53,11 @@ pipeline {
         }
 
         stage('Run Tests') {
-            agent {
-                label 'docker'
-            }
             parallel {
                 stage('Run test_app.py') {
+                    agent {
+                        label 'docker'
+                    }
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
@@ -68,6 +68,9 @@ pipeline {
                     }
                 }
                 stage('Run test_app2.py') {
+                    agent {
+                        label 'docker'
+                    }
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
