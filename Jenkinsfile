@@ -1,18 +1,18 @@
 pipeline {
-    agent none  // Указываем, что по умолчанию агент не используется
+    agent any
 
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
-        PORT = '5050'  // Выносим порт в переменную окружения
+        PORT = '5050'
     }
 
     stages {
         stage('Clone repository') {
             agent {
-                label 'minion'  // Используем хост для клонирования репозитория
+                label 'minione'
             }
             steps {
                 cleanWs()
@@ -23,7 +23,7 @@ pipeline {
 
         stage('Build Docker Image') {
             agent {
-                label 'minion'  // Используем хост для сборки Docker-образа
+                label 'minione'
             }
             steps {
                 script {
@@ -39,28 +39,22 @@ pipeline {
         stage('Start Docker Container') {
             agent {
                 docker {
-                    image 'myapp-image'  // Используем Docker-агент для запуска контейнера
-                    label 'minion'
+                    image "${IMAGE_NAME}"
+                    label 'docker'
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
                     reuseNode true
                 }
             }
             steps {
                 script {
-                    echo "Starting docker container!"
-                    sh """
-                    docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
-                    """
+                    echo "Docker container is running with image ${IMAGE_NAME}"
                 }
             }
         }
 
         stage('Run Tests') {
             agent {
-                docker {
-                    image 'myapp-image'  // Используем Docker-агент для выполнения тестов
-                    label 'minion'
-                    reuseNode true
-                }
+                label 'docker'
             }
             parallel {
                 stage('Run test_app.py') {
@@ -91,7 +85,6 @@ pipeline {
         always {
             echo 'Build finished'
             script {
-                // Остановка и удаление контейнера после завершения всех тестов
                 sh "docker stop ${CONTAINER_NAME} || true"
                 sh "docker rm ${CONTAINER_NAME} || true"
             }
