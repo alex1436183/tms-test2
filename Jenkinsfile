@@ -1,5 +1,5 @@
 pipeline {
-    agent label 'minion'
+    agent { label 'minion' }  // Агент 'minion' для всего пайплайна
 
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
@@ -38,6 +38,9 @@ pipeline {
                     args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
                     reuseNode true
                 }
+            }
+            steps {
+                echo "Docker container started successfully!"
             }
         }
 
@@ -107,3 +110,4 @@ pipeline {
         }
     }
 }
+
