@@ -28,15 +28,11 @@ pipeline {
         }
 
         stage('Start Docker Container and Run Tests') {
-            agent {
-                docker {
-                    image "${IMAGE_NAME}"
-                    label 'minion'
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"  // Запускаем контейнер
-                    reuseNode true
-                }
-            }
             steps {
+                // Запускаем контейнер в фоновом режиме
+                sh "docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+                
+                // Запускаем тесты параллельно
                 parallel (
                     test_app_py: {
                         sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
@@ -45,6 +41,10 @@ pipeline {
                         sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
                     }
                 )
+
+                // Завершаем работу контейнера после тестов
+                sh "docker stop ${CONTAINER_NAME}"
+                sh "docker rm ${CONTAINER_NAME}"
             }
         }
     }
