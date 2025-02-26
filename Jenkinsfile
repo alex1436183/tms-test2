@@ -40,7 +40,7 @@ pipeline {
             agent {
                 docker {
                     image "${IMAGE_NAME}" // Используем локальный образ
-                    label 'docker'
+                    label 'minion'
                     args "-p ${PORT}:${PORT} --name ${CONTAINER_NAME}" // Настроим порты и имя контейнера
                     reuseNode true // Повторное использование ноды
                 }
