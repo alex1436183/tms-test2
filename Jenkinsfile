@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        REPO_URL = 'https://github.com/alex1436183/tms_gr3.git' // Обновленный URL репозитория
+        REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'  // Обновленный URL репозитория
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
@@ -37,13 +37,17 @@ pipeline {
         }
 
         stage('Start Docker Container') {
+            agent {
+                docker {
+                    image "${IMAGE_NAME}" 
+                    label 'minion'  
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}" 
+                    reuseNode true  
+                }
+            }
             steps {
                 script {
-                    echo "Starting Docker container..."
-                    sh """
-                    docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
                     echo "Docker container started successfully!"
-                    """
                 }
             }
         }
