@@ -27,22 +27,32 @@ pipeline {
             }
         }
 
-        stage('Start Docker Container and Run Tests') {
+        stage('Start Docker Container') {
             steps {
                 // Запускаем контейнер в фоновом режиме
                 sh "docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}"
-                
-                // Запускаем тесты параллельно
-                parallel (
-                    test_app_py: {
-                        sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
-                    },
-                    test_app2_py: {
-                        sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
-                    }
-                )
+            }
+        }
 
-                // Завершаем работу контейнера после тестов
+        stage('Run Tests') {
+            steps {
+                // Параллельный запуск тестов
+                script {
+                    parallel (
+                        test_app_py: {
+                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
+                        },
+                        test_app2_py: {
+                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
+                        }
+                    )
+                }
+            }
+        }
+
+        stage('Stop and Remove Docker Container') {
+            steps {
+                // Останавливаем и удаляем контейнер
                 sh "docker stop ${CONTAINER_NAME}"
                 sh "docker rm ${CONTAINER_NAME}"
             }
