@@ -12,7 +12,7 @@ pipeline {
     stages {
         stage('Clone repository') {
             agent {
-                label 'minione'
+                label 'minion'
             }
             steps {
                 cleanWs()
@@ -23,7 +23,7 @@ pipeline {
 
         stage('Build Docker Image') {
             agent {
-                label 'minione'
+                label 'minion'
             }
             steps {
                 script {
