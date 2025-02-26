@@ -31,12 +31,13 @@ pipeline {
         }
 
         stage('Start Docker Container') {
-            agent {
-                docker {
-                    image "${IMAGE_NAME}"
-                    label 'minion'
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
-                    reuseNode true
+            steps {
+                script {
+                    echo "Starting Docker container..."
+                    sh """
+                    docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}
+                    """
+                    echo "Docker container started successfully!"
                 }
             }
         }
