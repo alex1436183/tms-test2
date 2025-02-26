@@ -39,9 +39,6 @@ pipeline {
                     reuseNode true
                 }
             }
-            steps {
-                echo "Docker container started successfully!"
-            }
         }
 
         stage('Run Tests') {
@@ -81,13 +78,6 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Build finished'
-            script {
-                sh "docker stop ${CONTAINER_NAME} || true"
-                sh "docker rm ${CONTAINER_NAME} || true"
-            }
-        }
         success {
             echo 'Build was successful!'
             emailext(
@@ -110,4 +100,3 @@ pipeline {
         }
     }
 }
-
