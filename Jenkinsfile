@@ -23,11 +23,11 @@ pipeline {
 
         stage('Build Docker Image') {
             agent {
-                label 'minion'
+                label 'docker'
             }
             steps {
                 script {
-                    echo "Building Docker image..."
+                    echo "Building Docker image on Docker agent..."
                     sh """
                     docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} .
                     echo "Docker image built successfully!"
@@ -39,15 +39,15 @@ pipeline {
         stage('Start Docker Container') {
             agent {
                 docker {
-                    image "${IMAGE_NAME}"
+                    image "${IMAGE_NAME}" // Используем локальный образ
                     label 'docker'
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
-                    reuseNode true
+                    args "-p ${PORT}:${PORT} --name ${CONTAINER_NAME}" // Настроим порты и имя контейнера
+                    reuseNode true // Повторное использование ноды
                 }
             }
             steps {
                 script {
-                    echo "Docker container started!"
+                    echo "Starting Docker container using local image..."
                 }
             }
         }
@@ -56,34 +56,26 @@ pipeline {
             parallel {
                 stage('Run test_app.py') {
                     agent {
-                        docker {
-                            image "${IMAGE_NAME}"
-                            label 'docker'
-                            reuseNode true
-                        }
+                        label 'docker'
                     }
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
                             sh """
-                            pytest tests/test_app.py --maxfail=1 --disable-warnings
+                            docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
                             """
                         }
                     }
                 }
                 stage('Run test_app2.py') {
                     agent {
-                        docker {
-                            image "${IMAGE_NAME}"
-                            label 'docker'
-                            reuseNode true
-                        }
+                        label 'docker'
                     }
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
                             sh """
-                            pytest tests/test_app2.py --maxfail=1 --disable-warnings
+                            docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
                             """
                         }
                     }
