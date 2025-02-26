@@ -39,10 +39,10 @@ pipeline {
         stage('Start Docker Container') {
             agent {
                 docker {
-                    image "${IMAGE_NAME}" // Используем локальный образ
-                    label 'minion'
-                    args "-p ${PORT}:${PORT} --name ${CONTAINER_NAME}" // Настроим порты и имя контейнера
-                    reuseNode true // Повторное использование ноды
+                    image "${IMAGE_NAME}"
+                    label 'minion' 
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}" 
+                    reuseNode true
                 }
             }
             steps {
@@ -56,7 +56,11 @@ pipeline {
             parallel {
                 stage('Run test_app.py') {
                     agent {
-                        label 'docker'
+                        docker {
+                            image "${IMAGE_NAME}" 
+                            label 'minion' 
+                            reuseNode true 
+                        }
                     }
                     steps {
                         script {
@@ -69,7 +73,11 @@ pipeline {
                 }
                 stage('Run test_app2.py') {
                     agent {
-                        label 'docker'
+                        docker {
+                            image "${IMAGE_NAME}" 
+                            label 'minion'
+                            reuseNode true
+                        }
                     }
                     steps {
                         script {
