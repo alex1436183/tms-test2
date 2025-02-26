@@ -23,7 +23,7 @@ pipeline {
 
         stage('Build Docker Image') {
             agent {
-                label 'docker'
+                label 'minion'
             }
             steps {
                 script {
