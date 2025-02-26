@@ -39,6 +39,9 @@ pipeline {
                     reuseNode true  // Повторно используем этот агент
                 }
             }
+            steps {
+                echo "Docker container started successfully!" // Пустая секция для корректной работы
+            }
         }
 
         stage('Run Tests') {
