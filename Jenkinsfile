@@ -40,7 +40,11 @@ pipeline {
             agent {
                 docker {
                     image "${IMAGE_NAME}"
-                    label 'minion' 
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}" 
+                    label 'minion'
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
                     reuseNode true
                 }
+            }
+        }
+    }
+}
