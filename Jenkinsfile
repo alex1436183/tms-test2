@@ -30,16 +30,13 @@ pipeline {
             }
         }
 
-        stage('Start Docker Container') {
-            agent {
-                docker {
-                    image "${IMAGE_NAME}"
-                    label 'minion'
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
-                    reuseNode true
+        stage('Remove Existing Docker Container') {
+            steps {
+                script {
+                    echo "Removing existing Docker container if exists..."
+                    sh "docker rm -f ${CONTAINER_NAME} || true"
                 }
             }
-
         }
 
         stage('Run Tests') {
