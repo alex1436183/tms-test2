@@ -30,15 +30,6 @@ pipeline {
             }
         }
 
-        stage('Remove Existing Docker Container') {
-            steps {
-                script {
-                    echo "Removing existing Docker container if exists..."
-                    sh "docker rm -f ${CONTAINER_NAME} || true"
-                }
-            }
-        }
-
         stage('Run Tests') {
             parallel {
                 stage('Run test_app.py') {
