@@ -40,6 +40,7 @@ pipeline {
                             image "${IMAGE_NAME}"
                             label 'minion'
                             args "-d"
+                            reuseNode true
                         }
                     }
                     steps {
@@ -55,6 +56,7 @@ pipeline {
                             image "${IMAGE_NAME}"
                             label 'minion'
                             args "-d"
+                            reuseNode true
                         }
                     }
                     steps {
