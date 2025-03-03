@@ -39,7 +39,7 @@ pipeline {
                         docker {
                             image "${IMAGE_NAME}"
                             label 'minion'
-                            args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
+                            args "-d"
                             reuseNode true
                         }
                     }
@@ -55,7 +55,7 @@ pipeline {
                         docker {
                             image "${IMAGE_NAME}"
                             label 'minion'
-                            args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
+                            args "-d"
                             reuseNode true
                         }
                     }
