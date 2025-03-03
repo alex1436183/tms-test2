@@ -1,5 +1,5 @@
 pipeline {
-    agent any
+    agent { label 'minion' }
 
     environment {
         REPO_URL = 'https://github.com/alex1436183/tms-test2.git'
@@ -11,9 +11,6 @@ pipeline {
 
     stages {
         stage('Clone repository') {
-            agent {
-                label 'minion'
-            }
             steps {
                 cleanWs()
                 echo "Cloning repository from ${REPO_URL}"
@@ -22,12 +19,9 @@ pipeline {
         }
 
         stage('Build Docker Image') {
-            agent {
-                label 'minion'
-            }
             steps {
                 script {
-                    echo "Building Docker image on Docker agent..."
+                    echo "Building Docker image..."
                     sh """
                     docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} .
                     echo "Docker image built successfully!"
@@ -40,15 +34,13 @@ pipeline {
             agent {
                 docker {
                     image "${IMAGE_NAME}"
-                    label 'minion' 
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}" 
+                    label 'minion'
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
                     reuseNode true
                 }
             }
             steps {
-                script {
-                    echo "Starting Docker container using local image..."
-                }
+                echo "Docker container started successfully!"
             }
         }
 
@@ -57,24 +49,22 @@ pipeline {
                 stage('Run test_app.py') {
                     agent {
                         docker {
-                            image "${IMAGE_NAME}" 
-                            label 'minion' 
-                            reuseNode true 
+                            image "${IMAGE_NAME}"
+                            label 'minion'
+                            reuseNode true
                         }
                     }
                     steps {
                         script {
                             echo "Running test_app.py inside Docker container..."
-                            sh """
-                            docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings
-                            """
+                            sh "pytest tests/test_app.py --maxfail=1 --disable-warnings"
                         }
                     }
                 }
                 stage('Run test_app2.py') {
                     agent {
                         docker {
-                            image "${IMAGE_NAME}" 
+                            image "${IMAGE_NAME}"
                             label 'minion'
                             reuseNode true
                         }
@@ -82,9 +72,7 @@ pipeline {
                     steps {
                         script {
                             echo "Running test_app2.py inside Docker container..."
-                            sh """
-                            docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings
-                            """
+                            sh "pytest tests/test_app2.py --maxfail=1 --disable-warnings"
                         }
                     }
                 }
@@ -93,13 +81,6 @@ pipeline {
     }
 
     post {
-        always {
-            echo 'Build finished'
-            script {
-                sh "docker stop ${CONTAINER_NAME} || true"
-                sh "docker rm ${CONTAINER_NAME} || true"
-            }
-        }
         success {
             echo 'Build was successful!'
             emailext(
@@ -122,4 +103,3 @@ pipeline {
         }
     }
 }
-
