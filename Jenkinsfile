@@ -30,19 +30,7 @@ pipeline {
             }
         }
 
-        stage('Start Docker Container') {
-            agent {
-                docker {
-                    image "${IMAGE_NAME}"
-                    label 'minion'
-                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
-                    reuseNode true
-                }
-            }
-            steps {
-                echo "Docker container started successfully!"
-            }
-        }
+      
 
         stage('Run Tests') {
             parallel {
@@ -51,6 +39,7 @@ pipeline {
                         docker {
                             image "${IMAGE_NAME}"
                             label 'minion'
+                            args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
                             reuseNode true
                         }
                     }
@@ -66,6 +55,7 @@ pipeline {
                         docker {
                             image "${IMAGE_NAME}"
                             label 'minion'
+                            args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
                             reuseNode true
                         }
                     }
