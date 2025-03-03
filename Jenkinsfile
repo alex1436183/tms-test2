@@ -2,7 +2,7 @@ pipeline {
     agent { label 'minion' }
 
     environment {
-        REPO_URL = 'https://github.com/alex1436183/tms_gr3.git'
+        REPO_URL = 'https://github.com/alex1436183/tms-test2.git'
         BRANCH_NAME = 'main'
         IMAGE_NAME = 'myapp-image'
         CONTAINER_NAME = 'myapp-container'
@@ -22,39 +22,56 @@ pipeline {
             steps {
                 script {
                     echo "Building Docker image..."
-                    sh "docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} ."
+                    sh """
+                    docker build --no-cache -f Dockerfile -t ${IMAGE_NAME} .
+                    echo "Docker image built successfully!"
+                    """
                 }
             }
         }
 
         stage('Start Docker Container') {
-            steps {
-                // Запускаем контейнер в фоновом режиме
-                sh "docker run -d -p ${PORT}:${PORT} --name ${CONTAINER_NAME} ${IMAGE_NAME}"
+            agent {
+                docker {
+                    image "${IMAGE_NAME}"
+                    label 'minion'
+                    args "-d -p ${PORT}:${PORT} --name ${CONTAINER_NAME}"
+                    reuseNode true
+                }
             }
+
         }
 
         stage('Run Tests') {
-            steps {
-                // Параллельный запуск тестов
-                script {
-                    parallel (
-                        test_app_py: {
-                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app.py --maxfail=1 --disable-warnings"
-                        },
-                        test_app2_py: {
-                            sh "docker exec ${CONTAINER_NAME} pytest tests/test_app2.py --maxfail=1 --disable-warnings"
+            parallel {
+                stage('Run test_app.py') {
+                    agent {
+                        docker {
+                            image "${IMAGE_NAME}"
+                            label 'minion'
                         }
-                    )
+                    }
+                    steps {
+                        script {
+                            echo "Running test_app.py inside Docker container..."
+                            sh "pytest tests/test_app.py --maxfail=1 --disable-warnings"
+                        }
+                    }
                 }
-            }
-        }
-
-        stage('Stop and Remove Docker Container') {
-            steps {
-                // Останавливаем и удаляем контейнер
-                sh "docker stop ${CONTAINER_NAME}"
-                sh "docker rm ${CONTAINER_NAME}"
+                stage('Run test_app2.py') {
+                    agent {
+                        docker {
+                            image "${IMAGE_NAME}"
+                            label 'minion'
+                        }
+                    }
+                    steps {
+                        script {
+                            echo "Running test_app2.py inside Docker container..."
+                            sh "pytest tests/test_app2.py --maxfail=1 --disable-warnings"
+                        }
+                    }
+                }
             }
         }
     }
